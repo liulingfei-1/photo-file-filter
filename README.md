@@ -10,13 +10,14 @@
 - **多格式支持**：兼容 CSV 及 Excel（.xlsx/.xls）格式的参考表格。
 - **模糊匹配**：若未找到完全匹配的标识符，脚本会尝试寻找最接近的项，以减少遗漏。
 - **AI 智能匹配**：利用 TF-IDF 与余弦相似度，进一步提升模糊匹配的准确性。
+- **复制后校验**：复制完成后进行文件大小与 SHA-256 双重校验，失败自动重试并跳过问题文件，最大限度避免拷贝错误。
 
 ## 安装依赖
 
 运行前请确保环境中已安装以下 Python 库：
 
 ```bash
-pip install pandas openpyxl scikit-learn
+pip install pandas openpyxl scikit-learn PySide6
 ```
 
 ## 参考表格式要求
@@ -43,6 +44,69 @@ python file_filter.py --source <源文件夹路径> --target <目标文件夹路
 
 ```bash
 python file_filter.py --source /path/to/photos --target /path/to/output --reference example_reference.csv
+```
+
+## 图形界面 (macOS)
+
+若希望在 macOS 上以图形界面使用本工具，可运行：
+
+```bash
+python gui_app.py
+```
+
+界面中依次选择：
+- 源文件夹：包含待筛选照片
+- 目标文件夹：输出目录
+- 参考表：CSV 或 Excel 文件
+
+点击“开始处理”即可，处理日志会在下方实时显示。
+
+### 打包为独立 App（可选）
+
+可以使用 `pyinstaller` 将 GUI 打包为独立应用：
+
+```bash
+pip install pyinstaller
+pyinstaller --noconfirm --windowed --name PhotoFilterGUI gui_app.py
+```
+
+打包后在 `dist/PhotoFilterGUI.app` 下即可直接双击运行。
+
+## 图形界面 (Windows)
+
+在 Windows 上可直接运行：
+
+```bat
+run_windows.bat
+```
+
+或在命令行中执行：
+
+```bat
+python gui_app.py
+```
+
+### 打包为独立 EXE（可选）
+
+使用 `pyinstaller` 打包：
+
+```bat
+pip install pyinstaller
+pyinstaller --noconfirm --windowed --name PhotoFilterGUI gui_app.py
+```
+
+生成的可执行文件位于 `dist/PhotoFilterGUI` 目录。
+
+## 自动发布到 GitHub Releases
+
+当你打 tag（如 `v1.0.0`）推送到 GitHub 后，Actions 会自动在 macOS 与 Windows 上构建，并把以下产物上传到 Releases：
+- `PhotoFilterGUI-macOS.zip`（内含 `.app`）
+- `PhotoFilterGUI-Windows.zip`（内含 `.exe` 及所需文件）
+
+手动触发流程：
+```bash
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 ## 重要说明

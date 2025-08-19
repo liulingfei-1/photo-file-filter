@@ -4,6 +4,7 @@
 import os
 import shutil
 import argparse
+import hashlib
 import pandas as pd
 import re
 import difflib
@@ -11,7 +12,68 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-def process_files(source_folder, target_folder, reference_file):
+def _iter_source_files(source_folder):
+    """遍历源目录，产生需要处理的文件名（过滤隐藏文件）。"""
+    for root, _, files in os.walk(source_folder):
+        for filename in files:
+            if filename.startswith('.'):
+                continue
+            yield root, filename
+
+def _compute_sha256(file_path, chunk_size=1024 * 1024):
+    """计算文件的 SHA-256 校验值。"""
+    sha256 = hashlib.sha256()
+    with open(file_path, 'rb') as f:
+        while True:
+            data = f.read(chunk_size)
+            if not data:
+                break
+            sha256.update(data)
+    return sha256.hexdigest()
+
+def _copy_with_verify(source_file, target_file, max_retries=2):
+    """复制文件到目标位置，并进行内容校验；失败将按次数重试。
+
+    返回 True 表示复制并校验成功；否则 False。
+    """
+    try:
+        source_hash = _compute_sha256(source_file)
+    except Exception as e:  # noqa: BLE001
+        print(f"计算源文件哈希失败: {source_file} -> {e}")
+        return False
+
+    attempt = 0
+    while attempt <= max_retries:
+        try:
+            shutil.copy2(source_file, target_file)
+            # 快速尺寸检查
+            if os.path.getsize(source_file) != os.path.getsize(target_file):
+                raise IOError("文件大小不一致")
+            # 严格哈希校验
+            target_hash = _compute_sha256(target_file)
+            if target_hash == source_hash:
+                return True
+            raise IOError("哈希不一致")
+        except Exception as e:  # noqa: BLE001
+            if attempt < max_retries:
+                print(f"复制校验失败 (第{attempt + 1}次): {e}，准备重试…")
+                try:
+                    if os.path.exists(target_file):
+                        os.remove(target_file)
+                except Exception:
+                    pass
+                attempt += 1
+                continue
+            else:
+                print(f"复制校验最终失败: {e}")
+                try:
+                    if os.path.exists(target_file):
+                        os.remove(target_file)
+                except Exception:
+                    pass
+                return False
+
+def process_files(source_folder, target_folder, reference_file, progress_callback=None, is_cancelled=None):
     """
     根据参考表格筛选文件，复制到目标文件夹并重命名
     
@@ -59,11 +121,18 @@ def process_files(source_folder, target_folder, reference_file):
     
     # 处理源文件夹中的文件
     matched_count = 0
-    for root, _, files in os.walk(source_folder):
-        for filename in files:
-            # 跳过隐藏文件
-            if filename.startswith('.'):
-                continue
+    processed_count = 0
+    all_files = list(_iter_source_files(source_folder))
+    total_files = len(all_files)
+    if progress_callback:
+        try:
+            progress_callback(processed_count, total_files, matched_count, None)
+        except Exception:
+            pass
+    for root, filename in all_files:
+            if is_cancelled and callable(is_cancelled) and is_cancelled():
+                print("处理已被用户取消")
+                break
 
             basename, ext = os.path.splitext(filename)
 
@@ -119,13 +188,20 @@ def process_files(source_folder, target_folder, reference_file):
                 # 源文件和目标文件的完整路径
                 source_file = os.path.join(root, filename)
 
-                # 复制文件并重命名
-                try:
-                    shutil.copy2(source_file, target_file)
-                    print(f"已复制并重命名: {filename} -> {new_filename}")
+                # 复制文件并重命名（带校验与重试）
+                success = _copy_with_verify(source_file, target_file)
+                if success:
+                    print(f"已复制并重命名(校验通过): {filename} -> {new_filename}")
                     matched_count += 1
-                except Exception as e:
-                    print(f"复制文件 {filename} 时出错: {e}")
+                else:
+                    print(f"复制或校验失败，已跳过: {filename}")
+            # 进度更新
+            processed_count += 1
+            if progress_callback:
+                try:
+                    progress_callback(processed_count, total_files, matched_count, filename)
+                except Exception:
+                    pass
     
     print(f"\n处理完成! 共找到并处理了{matched_count}个匹配的文件")
     if matched_count == 0:
