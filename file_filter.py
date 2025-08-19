@@ -106,11 +106,12 @@ def main():
     if not os.path.exists(args.source):
         print(f"错误: 源文件夹不存在: {args.source}")
         return
-    
-    if not os.path.exists(os.path.dirname(args.target)):
-        print(f"错误: 目标文件夹的父目录不存在: {os.path.dirname(args.target)}")
+
+    target_parent = os.path.dirname(args.target)
+    if target_parent and not os.path.exists(target_parent):
+        print(f"错误: 目标文件夹的父目录不存在: {target_parent}")
         return
-    
+
     if not os.path.exists(args.reference):
         print(f"错误: 参考表格文件不存在: {args.reference}")
         return
