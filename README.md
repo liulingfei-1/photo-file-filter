@@ -130,3 +130,29 @@ git push origin v1.0.0
 - `/output/北京风景照.jpg`
 - `/output/假日照片.png`
 
+## 项目结构
+
+仓库中的主要文件与目录说明如下：
+
+- `file_filter.py`：命令行脚本，负责根据参考表筛选、复制并重命名照片。
+- `gui_app.py`：基于 PySide6 的图形界面，封装了核心筛选逻辑。
+- `example_photos/`：示例源照片，可用于快速体验脚本功能。
+- `output_photos/`：示例输出照片，展示处理后的结果格式。
+- `example_reference.csv`：示例参考表格，提供标识符到备注的映射。
+- `tests/`：包含 `pytest` 单元测试，确保核心功能正常工作。
+- `requirements.txt`：项目依赖清单。
+- `run_windows.bat`：在 Windows 环境下启动 GUI 的批处理脚本。
+- `PhotoFilterGUI.spec` 与 `pyinstaller.spec`：用于使用 PyInstaller 打包为可执行文件的配置。
+
+## 开发与测试
+
+1. 安装开发依赖：
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. 运行单元测试：
+   ```bash
+   pytest
+   ```
+
+
