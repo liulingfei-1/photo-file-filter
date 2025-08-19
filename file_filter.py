@@ -102,12 +102,22 @@ def process_files(source_folder, target_folder, reference_file):
                     )
 
             if remark:
-                # 创建新的文件名
+                # 创建新的文件名，如有重名则自动追加编号
                 new_filename = f"{remark}{ext}"
+                target_file = os.path.join(target_folder, new_filename)
+                if os.path.exists(target_file):
+                    counter = 1
+                    while True:
+                        candidate = f"{remark}_{counter}{ext}"
+                        candidate_path = os.path.join(target_folder, candidate)
+                        if not os.path.exists(candidate_path):
+                            new_filename = candidate
+                            target_file = candidate_path
+                            break
+                        counter += 1
 
                 # 源文件和目标文件的完整路径
                 source_file = os.path.join(root, filename)
-                target_file = os.path.join(target_folder, new_filename)
 
                 # 复制文件并重命名
                 try:
@@ -115,7 +125,7 @@ def process_files(source_folder, target_folder, reference_file):
                     print(f"已复制并重命名: {filename} -> {new_filename}")
                     matched_count += 1
                 except Exception as e:
-                    print(f"复制文件时出错 {filename}: {e}")
+                    print(f"复制文件 {filename} 时出错: {e}")
     
     print(f"\n处理完成! 共找到并处理了{matched_count}个匹配的文件")
     if matched_count == 0:
