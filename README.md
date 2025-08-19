@@ -9,13 +9,14 @@
 - **自定义命名**：依据参考表中的备注字段重命名文件，使输出结果更具可读性。
 - **多格式支持**：兼容 CSV 及 Excel（.xlsx/.xls）格式的参考表。
 - **模糊匹配**：若未找到完全匹配的标识符，脚本会尝试寻找最接近的项，以减少遗漏。
+- **AI 智能匹配**：利用 TF-IDF 与余弦相似度，进一步提升模糊匹配的准确性。
 
 ## 安装依赖
 
 运行前请确保环境中已安装以下 Python 库：
 
 ```bash
-pip install pandas openpyxl
+pip install pandas openpyxl scikit-learn
 ```
 
 ## 参考表格式要求

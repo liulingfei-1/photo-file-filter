@@ -7,6 +7,9 @@ import argparse
 import pandas as pd
 import re
 import difflib
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 def process_files(source_folder, target_folder, reference_file):
     """
@@ -45,6 +48,10 @@ def process_files(source_folder, target_folder, reference_file):
                 remark = str(row[df.columns[1]]).strip()
                 id_to_remark[identifier.lower()] = remark
 
+        reference_keys = list(id_to_remark.keys())
+        vectorizer = TfidfVectorizer(analyzer='char').fit(reference_keys)
+        reference_matrix = vectorizer.transform(reference_keys)
+
         print(f"成功加载参考表格，共有{len(id_to_remark)}个有效映射关系")
     except Exception as e:
         print(f"读取参考表格时出错: {e}")
@@ -80,6 +87,19 @@ def process_files(source_folder, target_folder, reference_file):
                         remark = id_to_remark[matched_key]
                         print(f"模糊匹配: {filename} 的标识 {token} -> {matched_key}")
                         break
+
+            if not remark:
+                tokens_lower = [t.lower() for t in tokens]
+                token_matrix = vectorizer.transform(tokens_lower)
+                similarities = cosine_similarity(token_matrix, reference_matrix)
+                token_idx, ref_idx = np.unravel_index(similarities.argmax(), similarities.shape)
+                best_score = similarities[token_idx, ref_idx]
+                if best_score >= 0.5:
+                    matched_key = reference_keys[ref_idx]
+                    remark = id_to_remark[matched_key]
+                    print(
+                        f"AI匹配: {filename} 的标识 {tokens[token_idx]} -> {matched_key} (相似度 {best_score:.2f})"
+                    )
 
             if remark:
                 # 创建新的文件名
