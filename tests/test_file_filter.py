@@ -6,7 +6,7 @@ from file_filter import process_files
 
 
 def test_duplicate_file_names(tmp_path):
-    """Files mapping to the same remark should not overwrite each other."""
+    """Files mapping to the same identifier should not overwrite each other."""
 
     source = tmp_path / "source"
     target = tmp_path / "target"
@@ -17,12 +17,12 @@ def test_duplicate_file_names(tmp_path):
     (source / "img_1234.jpg").write_text("a")
     (source / "holiday1234.jpg").write_text("b")
 
-    # 构造参考表格
+    # 构造参考表格（单列格式）
     reference = tmp_path / "ref.csv"
-    reference.write_text("id,remark\n1234,beijing\n")
+    reference.write_text("id\n1234\n")
 
     process_files(str(source), str(target), str(reference))
 
-    assert (target / "beijing.jpg").exists()
-    assert (target / "beijing_1.jpg").exists()
+    assert (target / "1234.jpg").exists()
+    assert (target / "1234_1.jpg").exists()
 

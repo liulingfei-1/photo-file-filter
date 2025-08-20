@@ -55,12 +55,13 @@ class Worker(QObject):
     error = Signal(str)
     progress = Signal(int, int, int, str)  # processed, total, matched, current_filename
 
-    def __init__(self, source_folder: str, target_folder: str, reference_file: str, cancel_flag_getter=None):
+    def __init__(self, source_folder: str, target_folder: str, reference_file: str, cancel_flag_getter=None, use_ai_naming=False):
         super().__init__()
         self.source_folder = source_folder
         self.target_folder = target_folder
         self.reference_file = reference_file
         self._cancel_flag_getter = cancel_flag_getter or (lambda: False)
+        self.use_ai_naming = use_ai_naming
 
     @Slot()
     def run(self):
@@ -81,6 +82,7 @@ class Worker(QObject):
                     self.reference_file,
                     progress_callback=_progress_cb,
                     is_cancelled=self._cancel_flag_getter,
+                    use_ai_naming=self.use_ai_naming,
                 )
         except Exception as exc:  # noqa: BLE001
             self.error.emit(str(exc))
@@ -131,6 +133,11 @@ class MainWindow(QMainWindow):
         row3.addWidget(self.reference_edit)
         row3.addWidget(reference_btn)
         layout.addLayout(row3)
+
+        # AI naming option
+        self.ai_naming_checkbox = QCheckBox("使用AI视觉理解重命名 (通义千问)")
+        self.ai_naming_checkbox.setToolTip("启用后将使用阿里云通义千问视觉模型分析图片内容并重命名")
+        layout.addWidget(self.ai_naming_checkbox)
 
         # Run and control buttons
         self.run_btn = QPushButton("开始处理")
@@ -210,6 +217,7 @@ class MainWindow(QMainWindow):
         self.source_edit.setEnabled(not running)
         self.target_edit.setEnabled(not running)
         self.reference_edit.setEnabled(not running)
+        self.ai_naming_checkbox.setEnabled(not running)
         if hasattr(self, 'cancel_btn'):
             self.cancel_btn.setEnabled(running)
         if not running and hasattr(self, '_cancelled'):
@@ -245,7 +253,8 @@ class MainWindow(QMainWindow):
 
         self._worker_thread = QThread()
         self._cancelled = False
-        self._worker = Worker(source, target, reference, cancel_flag_getter=lambda: self._cancelled)
+        use_ai_naming = self.ai_naming_checkbox.isChecked()
+        self._worker = Worker(source, target, reference, cancel_flag_getter=lambda: self._cancelled, use_ai_naming=use_ai_naming)
         self._worker.moveToThread(self._worker_thread)
 
         self._worker_thread.started.connect(self._worker.run)

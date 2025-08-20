@@ -1,12 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import certifi
+
 
 a = Analysis(
     ['gui_app.py'],
     pathex=[],
     binaries=[],
-    datas=[],
-    hiddenimports=[],
+    datas=[(certifi.where(), 'certifi')],
+    hiddenimports=['pillow_heif', 'rawpy'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
