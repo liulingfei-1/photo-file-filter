@@ -124,3 +124,7 @@ pytest
 - **HTTP 400 from AI**: the image is usually too small (e.g., 8×12). Enlarge the shortest side and retry.
 - **Cannot read HEIC**: install `pillow-heif` and try again.
 - **Slow RAW processing**: lower the max size or increase QPS in the source code (consider API quota).
+
+## License
+
+This project is available under the [MIT License](LICENSE).
