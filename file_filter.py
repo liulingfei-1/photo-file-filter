@@ -36,7 +36,7 @@ except ImportError:
 
 # 阿里云通义千问API配置（多模态 generation 接口）
 QWEN_API_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
-QWEN_API_KEY = "sk-2a293b2cc0cc4b679c6aea6ce82ae7fe"
+QWEN_API_KEY = os.getenv("DASHSCOPE_API_KEY", "").strip()
 
 # AI请求健壮性配置（可由命令行参数覆盖）
 AI_REQUEST_TIMEOUT_S = 40
@@ -135,6 +135,10 @@ def convert_to_jpg(image_path, quality=85, max_size=(1024, 768)):
 
 def analyze_image_with_qwen(image_path):
     """使用通义千问视觉模型分析图片内容（多模态 generation 接口）。"""
+    if not QWEN_API_KEY:
+        print("未设置 DASHSCOPE_API_KEY，无法使用 AI 重命名。")
+        return None
+
     try:
         # 转换图片为JPG格式（包含压缩）
         jpg_path = convert_to_jpg(image_path, quality=80, max_size=(1024, 768))

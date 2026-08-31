@@ -62,7 +62,16 @@ python gui_app.py
 - 使用阿里云通义千问多模态端点：
   - Endpoint: `https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation`
   - 请求体 `input.messages[].content` 同时包含 `{ "image": "data:image/jpeg;base64,..." }` 与 `{ "text": "..." }`
-- API Key：修改 `file_filter.py` 中的 `QWEN_API_KEY`。
+- API Key：通过环境变量 `DASHSCOPE_API_KEY` 注入，禁止写入源代码：
+
+  ```bash
+  # macOS / Linux
+  export DASHSCOPE_API_KEY="你的新密钥"
+
+  # Windows PowerShell
+  $env:DASHSCOPE_API_KEY="你的新密钥"
+  ```
+
 - 建议安装：`rawpy`（RAW 解码）、`pillow-heif`（HEIC/HEIF 解码）。
 
 ### 默认阈值（可在 `file_filter.py` 顶部修改）

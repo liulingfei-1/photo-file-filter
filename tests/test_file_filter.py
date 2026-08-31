@@ -2,7 +2,15 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import file_filter
 from file_filter import process_files
+
+
+def test_ai_naming_requires_environment_key(monkeypatch, capsys):
+    monkeypatch.setattr(file_filter, "QWEN_API_KEY", "")
+
+    assert file_filter.analyze_image_with_qwen("unused.jpg") is None
+    assert "DASHSCOPE_API_KEY" in capsys.readouterr().out
 
 
 def test_duplicate_file_names(tmp_path):
@@ -25,4 +33,3 @@ def test_duplicate_file_names(tmp_path):
 
     assert (target / "1234.jpg").exists()
     assert (target / "1234_1.jpg").exists()
-

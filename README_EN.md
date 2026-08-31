@@ -62,7 +62,16 @@ Choose source, target and reference table in the GUI; optionally enable "Use AI 
 - Uses the Tongyi Qianwen multimodal endpoint:
   - Endpoint: `https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation`
   - Payload `input.messages[].content` includes both `{ "image": "data:image/jpeg;base64,..." }` and `{ "text": "..." }`
-- Set your API key in `file_filter.py` (`QWEN_API_KEY`).
+- Provide the API key through the `DASHSCOPE_API_KEY` environment variable; never commit it to source:
+
+  ```bash
+  # macOS / Linux
+  export DASHSCOPE_API_KEY="your-new-key"
+
+  # Windows PowerShell
+  $env:DASHSCOPE_API_KEY="your-new-key"
+  ```
+
 - Recommended dependencies: `rawpy` for RAW decoding and `pillow-heif` for HEIC/HEIF.
 
 ### Default Thresholds (editable at top of `file_filter.py`)
